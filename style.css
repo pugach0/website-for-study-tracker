@@ -1,0 +1,33 @@
+body {
+    background-color: #c054ff;
+    font-family: "Playfair Display", serif;
+}
+
+.title{
+    display: flex;
+    justify-content: center;
+    padding-top: 2%;
+    padding-bottom: 2%;
+}
+
+#grid{
+    display: grid;
+    justify-content: center;
+    gap: 3px;
+    background-color: #3c3c3c71;
+    padding-top: 2%;
+}
+
+#logForm{
+    justify-content: center;
+    display: grid;
+    place-items: center;
+}
+
+
+
+.cell{
+    width: 70px;
+    height: 70px;
+    border: 1px solid black;
+}
