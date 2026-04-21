@@ -3,19 +3,45 @@ body {
     font-family: "Playfair Display", serif;
 }
 
-.title{
+.hover{
+	display: none;
+	position: absolute;
+	border: 1px solid #ccc;
+	background:#fff; padding:10px; z-index:100;
+
+}
+
+#title{
     display: flex;
     justify-content: center;
     padding-top: 2%;
     padding-bottom: 2%;
+    font-size: 340%;
 }
 
-#grid{
-    display: grid;
-    justify-content: center;
-    gap: 3px;
-    background-color: #3c3c3c71;
-    padding-top: 2%;
+#grid {
+  display: grid;
+  justify-content: center;
+  gap: 3px;
+  padding: 20px;          /* padding between grid and background edge */
+  padding-top: 2%;
+  background-color: #3c3c71b7;
+  background-size: cover;
+  border-radius: 16px;    /* rounded corners */
+  width: fit-content;     /* shrinks background to wrap the grid */
+  margin: 0 auto;         /* centers it */
+}
+
+#tooltip {
+    display: none;
+    position: fixed;
+    background: #222;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    pointer-events: none; /* so it doesn't interfere with mouse */
+    z-index: 999;
 }
 
 #logForm{
@@ -24,10 +50,30 @@ body {
     place-items: center;
 }
 
+#logLabel{
+    display: inline-block;
+    background-color: rgb(28, 0, 47);
+    color: rgb(209, 209, 209);
+    padding: 0.5rem 1rem;
+    border-radius: 0.3rem;
+    cursor: pointer;
+    font-family: sans-serif;
+		margin-bottom: 5%;
+		
+}
 
 
 .cell{
     width: 70px;
     height: 70px;
     border: 1px solid black;
+		display: flex;
+		align-items: center;
+    justify-content: center;
+}
+
+.cell span{
+	font-size: 25px;
+	font-family: serif;
+	font-weight: bold;
 }
