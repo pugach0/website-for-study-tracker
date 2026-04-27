@@ -5,6 +5,7 @@ const grid = document.getElementById("grid")
 const tooltip = document.getElementById("tooltip")
 grid.style.gridTemplateColumns = `repeat(${cols}, 70px)`
 grid.style.gridTemplateRows = `repeat(${rows}, 70px)`
+const events = document.getElementById("events")
 
 const days = daysInCurrentMonth();
 for (let i = 0; i < days; i++) {
@@ -18,8 +19,9 @@ for (let i = 0; i < days; i++) {
     cell.appendChild(time);
     grid.appendChild(cell);
     cell.addEventListener("mouseover", (e) => {
-        tooltip.innerText = cell.dataset.info ?? "No data"
+        tooltip.innerText = cell.dataset.time ?? "nothing useful"
         tooltip.style.display = "block"
+        events.textContent = cell.dataset.events ?? " "
     })
     cell.addEventListener("mousemove", (e) => {
         tooltip.style.left = e.clientX + 12 + "px"
@@ -27,6 +29,7 @@ for (let i = 0; i < days; i++) {
     })
     cell.addEventListener("mouseleave", () => {
         tooltip.style.display = "none"
+        events.textContent = " "
     })
 }
 
@@ -77,6 +80,7 @@ function process(){
     for (let i = 0; i < now.getDate(); i++) {
         const date = new Date()
         date.setDate(date.getDate() - i)
+        currentCell = document.getElementById("day-" + (days - date.getDate()))
 
         const day = String(date.getDate()).padStart(2, "0")
         const month = String(date.getMonth() + 1).padStart(2, "0")
@@ -110,7 +114,7 @@ function process(){
                 const currentTimeStr = convertHours(currentHours)
                 activityHours.push(`${activities[j]} ${currentTimeStr}`)
             }
-            document.getElementById("day-" + (days - date.getDate())).dataset.info = activityHours.length > 0 ? activityHours.join("\n") : null
+            currentCell.dataset.time = activityHours.length > 0 ? activityHours.join("\n") : null
 
         }
         
@@ -127,11 +131,22 @@ function process(){
             })
         timeStr = convertHours(hours)
         }
-        document.getElementById("day-" + (days-date.getDate())).style.background = getColour(hours)
+        currentCell.style.background = getColour(hours)
         document.getElementById("day-" + (days - date.getDate()) + "t").textContent = timeStr
+
+        const eventLines = lines.filter(a => a.includes("EVENT") && a.includes(dateStr))
+        let events = []
+        if (eventLines.length > 0 ){
+            eventLines.forEach(entry =>{
+                const words = entry.split(" ")
+                events.push(words[3].replace(/_/g, " "))
+            })
+            currentCell.style.boxShadow = "inset 0 0 0 5px yellow";
+            currentCell.dataset.events = events.length > 0 ? events.join("\n") : null
+        }
     }
     const todayCell = document.getElementById("day-" + (days - now.getDate()))
-    todayCell.style.border = "1px solid red";
+    todayCell.style.boxShadow = "inset 0 0 0 2px red";
 }
 }
 window.addEventListener("load", function(e) {

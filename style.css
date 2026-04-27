@@ -1,6 +1,6 @@
 body {
     background-color: #c054ff;
-    font-family: "Playfair Display", serif;
+    font-family: serif;
 }
 
 .hover{
@@ -40,8 +40,25 @@ body {
     padding: 8px 12px;
     border-radius: 8px;
     font-size: 13px;
-    pointer-events: none; /* so it doesn't interfere with mouse */
+    pointer-events: none; 
     z-index: 999;
+}
+
+#eventBox {
+  position: relative;
+  padding: 6px;
+  margin-top: 13.5rem;
+  height: 100px;
+  background-color: white;
+  box-shadow: inset 0 0 0 5px yellow;
+}
+#eventBox h1 {
+    font-family: serif;
+  font-size: large;
+  margin: 0;
+  text-align: left;
+  margin-left: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 #logForm{
@@ -58,10 +75,9 @@ body {
     border-radius: 0.3rem;
     cursor: pointer;
     font-family: sans-serif;
-		margin-bottom: 5%;
+    margin-bottom: 5%;
 		
 }
-
 
 .cell{
     width: 70px;
