@@ -9,14 +9,21 @@
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
 <body>
     <nav id="mainNav"></nav>
     <button id="statsButton">Stats</button>
     <h1 id="title"></h1>
-    <div id="stats">
-        <h1 id="statsTitle">Activities</h1>
+    <div id="stats" class="hidden">
+        <h1 id="totalHoursCounted"></h1>
+        <div id="tabSwitchBox">
+            <button class="tabSwitch" id="tabTotalSwitch">Total</button>
+            <button class="tabSwitch" id="tabYearSwitch">Year</button>
+            <button class="tabSwitch" id="tabMonthSwitch">Month</button>
+            <button class="tabSwitch" id="tabWeekSwitch">Week</button>
+        </div>
+        <h1 id="statsTitle">Total</h1>
         <div id="activities">
         </div>
     </div>

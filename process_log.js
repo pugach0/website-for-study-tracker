@@ -24,7 +24,7 @@ for (let i = 0; i < days; i++) {
     cell.appendChild(time);
     grid.appendChild(cell);
     cell.addEventListener("mouseover", (e) => {
-        tooltip.innerText = cell.dataset.time ?? "nothing useful"
+        tooltip.innerText = cell.dataset.time === null || cell.dataset.time === "" ? "nothing useful" : cell.dataset.time
         tooltip.style.display = "block"
         events.textContent = cell.dataset.events ?? " "
     })
@@ -40,25 +40,59 @@ for (let i = 0; i < days; i++) {
 
 //graph update
 activities = document.getElementById('activities')
-function updateGraph(){
+function updateGraph(ActivityTime){
     activities.replaceChildren()
-    const sorted = Object.entries(totalActivityTime).sort((a, b) => b[1] - a[1])
-    mostTime = sorted[0][1]
+    const entries = Object.entries(ActivityTime ?? {})
+    if (entries.length === 0) {
+        document.getElementById('statsTitle').textContent = "Total"
+        return
+    }
+
+    const sorted = entries.sort((a, b) => b[1] - a[1])
+    const mostTime = sorted[0]?.[1] ?? 0
+    let totalHoursCounted = 0
+
     sorted.forEach(([key, value]) =>{
-        console.log("created shit bro")
         const activityBox = document.createElement('div')
         activityBox.classList.add('activityBox')
         const activityName = document.createElement('h1')
-        activityName.textContent = key
+        switch (key) {
+            case "CS":
+                activityName.textContent = "Computer Studies"
+            break;
+            case "P":
+                activityName.textContent = "Piano"
+            break;
+            case "M":
+                activityName.textContent = "Math"
+            break;
+            case "NMT-UH":
+                activityName.textContent = "Ukrainian History"
+            break;
+            case "NMT-UL":
+                activityName.textContent = "Ukrainian Language"
+            break;
+            default:
+                activityName.textContent = key
+            break;
+        }
         activityName.classList.add('activityName')
         const graphBar = document.createElement('div')
         graphBar.classList.add('graphBar')
-        graphBar.style.width = ((value/mostTime)*100-20)+"%"
+        graphBar.style.width = mostTime > 0 ? ((value/mostTime)*100)+"%" : "0%"
+        const totalHours = document.createElement('p')
+        totalHours.textContent = convertHours(value)
+        totalHoursCounted += parseFloat(value) || 0
+        totalHours.classList.add('activityHours')
+        graphBar.appendChild(totalHours)
         activityBox.appendChild(activityName)
         activityBox.appendChild(graphBar)
         activities.appendChild(activityBox)
     })
+    document.getElementById('totalHoursCounted').textContent = "Total hours: " + convertHours(totalHoursCounted)
 }
+
+
 
 //title creation
 title = document.getElementById("title")
@@ -67,6 +101,7 @@ title.textContent = new Date().toLocaleDateString('en', { month: 'long', year: '
 //definitions of functions
 function getColour(hours) {
     if (hours === null) return "#f9fff7"
+    if (hours >= 4) return "#002b11"
     if (hours >= 3) return "#00441b"
     if (hours >= 2) return "#006d2c"
     if (hours >= 1.5) return "#238b45"
@@ -86,87 +121,238 @@ function convertHours(totalHours){
     return `${hours}:${String(minutes).padStart(2, "0")}`
 }
 
-const totalActivityTime = {}
+
 function process(){
     if(localStorage.getItem("log") !== null){
-    const text = localStorage.getItem("log");
-    const lines = text.split("\n").filter(l => l.trim() !== "")
-    Object.keys(totalActivityTime).forEach(key => delete totalActivityTime[key]);
+        const text = localStorage.getItem("log");
+        const lines = text.split("\n").filter(l => l.trim() !== "")
 
-    for (let i = 0; i < now.getDate(); i++) {
-        const date = new Date()
-        date.setDate(date.getDate() - i)
-        currentCell = document.getElementById("day-" + (days - date.getDate()))
-        const day = String(date.getDate()).padStart(2, "0")
-        const month = String(date.getMonth() + 1).padStart(2, "0")
-        const year  = String(date.getFullYear()).slice(-2)
-        const dateStr = `${day}.${month}.${year}`
+        for (let i = 0; i < now.getDate(); i++) {
+            const date = new Date()
+            date.setDate(date.getDate() - i)
+            const day = String(date.getDate()).padStart(2, "0")
+            const month = String(date.getMonth() + 1).padStart(2, "0")
+            const year  = String(date.getFullYear()).slice(-2)
+            const dateStr = `${day}.${month}.${year}`
 
-        //ACTIVITIES: creating the array with all activities
-        const finishes = lines.filter(a => a.includes(dateStr) && a.includes("FINISH"))
-        let activities = null
-        if (finishes.length>0){
-            activities = []
+            const finishes = lines.filter(a => a.includes(dateStr) && a.includes("FINISH"))
+
+            // Collect unique activities for this day
+            const activities = []
             finishes.forEach(entry => {
                 const words = entry.split(" ")
-                if (!activities.includes(words[4])){
-                    activities.push(words[4].trim())
-                }
+                if (!activities.includes(words[4])) activities.push(words[4])
             })
-        }
 
-        //Creating an array with all activities for the day and the array that contains data in the form [ACTIVITY H:M:S] where H:M:S is the total time of that activity
-        //Also adds up the total time for each activity
-        let activityHours = []
-        if (activities !== null){
-            for (let j = 0; j<activities.length; j++){
+            // Sum hours per activity and bucket into time ranges
+            let activityHours = []
+            for (let j = 0; j < activities.length; j++){
                 const activityLines = finishes.filter(a => a.includes(activities[j]))
                 let currentHours = 0
                 activityLines.forEach(entry => {
                     const words = entry.split(" ")
-                    const timeStr = words[3]
-                    const [h, m] = timeStr.split(":")
+                    const [h, m] = words[3].split(":")
                     currentHours += parseInt(h) + parseInt(m) / 60
                 })
-                totalActivityTime[activities[j]] = (totalActivityTime[activities[j]] ?? 0) + currentHours //adding up hours for each activity throughout all days
-                const currentTimeStr = convertHours(currentHours)
-                activityHours.push(`${activities[j]} ${currentTimeStr}`)
+                activityHours.push(`${activities[j]} ${convertHours(currentHours)}`)
             }
-            currentCell.dataset.time = activityHours.length > 0 ? activityHours.join("\n") : null //adding data to the dataset
-        }
-        
-        //Getting all the EVENT lines and putting the contexts of the events in the array
-        const eventLines = lines.filter(a => a.includes("EVENT") && a.includes(dateStr))
-        let events = []
-        if (eventLines.length > 0 ){
-            eventLines.forEach(entry =>{
-                const words = entry.split(" ")
-                events.push(words[3].replace(/_/g, " "))
-            })
-            currentCell.style.boxShadow = "inset 0 0 0 5px yellow";
-            currentCell.dataset.events = events.length > 0 ? events.join("\n") : null //Dataset
-        }
-
-        //Calculating the total time and assigning colors to the cells
-        let timeStr = null
-        let hours = null
-        if (finishes.length > 0){
-            hours = 0
+            const currentCell = document.getElementById("day-" + (days - date.getDate()))
+            currentCell.dataset.time = activityHours.join("\n")
+            
+            
+            // Total hours for cell color
+            let hours = 0
             finishes.forEach(entry => {
                 const words = entry.split(" ")
-                const t = words[3]           
-                const [h, m] = t.split(":")
+                const [h, m] = words[3].split(":")
                 hours += parseInt(h) + parseInt(m) / 60
             })
-        timeStr = convertHours(hours)
+            currentCell.style.background = getColour(hours)
+            document.getElementById("day-" + (days - date.getDate()) + "t").textContent =convertHours(hours) == "0:00" ? "" : convertHours(hours)
+
+            // Events
+            const eventLines = lines.filter(a => a.includes("EVENT") && a.includes(dateStr))
+            if (eventLines.length > 0) {
+                const events = eventLines.map(entry => entry.split(" ")[3].replace(/_/g, " "))
+                currentCell.style.boxShadow = "inset 0 0 0 5px yellow"
+                currentCell.dataset.events = events.join("\n")
+            }
+            
         }
-        currentCell.style.background = getColour(hours)
-        document.getElementById("day-" + (days - date.getDate()) + "t").textContent = timeStr
+
+        const todayCell = document.getElementById("day-" + (days - now.getDate()))
+        if (todayCell) todayCell.style.boxShadow = "inset 0 0 0 2px red"
+        updateGraph(totalActivityTime)
     }
-    const todayCell = document.getElementById("day-" + (days - now.getDate()))
-    todayCell.style.boxShadow = "inset 0 0 0 2px red";
-    updateGraph()
 }
+
+//graph data processing
+const weekActivityTime = {}
+const monthActivityTime ={}
+const yearActivityTime ={}
+const totalActivityTime = {}
+function processForGraphTotal(){
+    if(localStorage.getItem("log") !== null){
+        const text = localStorage.getItem("log");
+        const lines = text.split("\n").filter(l => l.trim() !== "")
+        Object.keys(totalActivityTime).forEach(key => delete totalActivityTime[key]);
+
+        const MAX_DAYS = 2000
+        for (let i = 0; i < MAX_DAYS; i++) {
+            const date = new Date()
+            date.setDate(date.getDate() - i)
+            const day = String(date.getDate()).padStart(2, "0")
+            const month = String(date.getMonth() + 1).padStart(2, "0")
+            const year  = String(date.getFullYear()).slice(-2)
+            const dateStr = `${day}.${month}.${year}`
+
+            const finishes = lines.filter(a => a.includes(dateStr) && a.includes("FINISH"))
+            if (finishes.length === 0) continue
+
+            // Collect unique activities for this day
+            const activities = []
+            finishes.forEach(entry => {
+                const words = entry.split(" ")
+                if (!activities.includes(words[4])) activities.push(words[4])
+            })
+
+            // Sum hours per activity 
+            let activityHours = []
+            for (let j = 0; j < activities.length; j++){
+                const activityLines = finishes.filter(a => a.includes(activities[j]))
+                let currentHours = 0
+                activityLines.forEach(entry => {
+                    const words = entry.split(" ")
+                    const [h, m] = words[3].split(":")
+                    currentHours += parseInt(h) + parseInt(m) / 60
+                })
+                totalActivityTime[activities[j]] = (totalActivityTime[activities[j]] ?? 0) + currentHours  // always
+            }
+        }
+    }
+}
+
+function processForGraphYear(){
+    if(localStorage.getItem("log") !== null){
+        const text = localStorage.getItem("log");
+        const lines = text.split("\n").filter(l => l.trim() !== "")
+        Object.keys(yearActivityTime).forEach(key => delete yearActivityTime[key]);
+
+        const MAX_DAYS = 365
+        for (let i = 0; i < MAX_DAYS; i++) {
+            const date = new Date()
+            date.setDate(date.getDate() - i)
+            const day = String(date.getDate()).padStart(2, "0")
+            const month = String(date.getMonth() + 1).padStart(2, "0")
+            const year  = String(date.getFullYear()).slice(-2)
+            const dateStr = `${day}.${month}.${year}`
+
+            const finishes = lines.filter(a => a.includes(dateStr) && a.includes("FINISH"))
+            if (finishes.length === 0) continue
+
+            // Collect unique activities for this day
+            const activities = []
+            finishes.forEach(entry => {
+                const words = entry.split(" ")
+                if (!activities.includes(words[4])) activities.push(words[4])
+            })
+
+            // Sum hours per activity 
+            let activityHours = []
+            for (let j = 0; j < activities.length; j++){
+                const activityLines = finishes.filter(a => a.includes(activities[j]))
+                let currentHours = 0
+                activityLines.forEach(entry => {
+                    const words = entry.split(" ")
+                    const [h, m] = words[3].split(":")
+                    currentHours += parseInt(h) + parseInt(m) / 60
+                })
+                yearActivityTime[activities[j]]  = (yearActivityTime[activities[j]]  ?? 0) + currentHours
+            }
+        }
+    }
+}
+
+function processForGraphMonth(){
+    if(localStorage.getItem("log") !== null){
+        const text = localStorage.getItem("log");
+        const lines = text.split("\n").filter(l => l.trim() !== "")
+        Object.keys(monthActivityTime).forEach(key => delete monthActivityTime[key]);
+
+        const MAX_DAYS = daysInCurrentMonth()
+        for (let i = 0; i < MAX_DAYS; i++) {
+            const date = new Date()
+            date.setDate(date.getDate() - i)
+            const day = String(date.getDate()).padStart(2, "0")
+            const month = String(date.getMonth() + 1).padStart(2, "0")
+            const year  = String(date.getFullYear()).slice(-2)
+            const dateStr = `${day}.${month}.${year}`
+
+            const finishes = lines.filter(a => a.includes(dateStr) && a.includes("FINISH"))
+            if (finishes.length === 0) continue
+
+            // Collect unique activities for this day
+            const activities = []
+            finishes.forEach(entry => {
+                const words = entry.split(" ")
+                if (!activities.includes(words[4])) activities.push(words[4])
+            })
+
+            // Sum hours per activity 
+            let activityHours = []
+            for (let j = 0; j < activities.length; j++){
+                const activityLines = finishes.filter(a => a.includes(activities[j]))
+                let currentHours = 0
+                activityLines.forEach(entry => {
+                    const words = entry.split(" ")
+                    const [h, m] = words[3].split(":")
+                    currentHours += parseInt(h) + parseInt(m) / 60
+                })
+                monthActivityTime[activities[j]]  = (monthActivityTime[activities[j]]  ?? 0) + currentHours
+            }
+        }
+    }
+}
+
+function processForGraphWeek(){
+    if(localStorage.getItem("log") !== null){
+        const text = localStorage.getItem("log");
+        const lines = text.split("\n").filter(l => l.trim() !== "")
+        Object.keys(weekActivityTime).forEach(key => delete weekActivityTime[key]);
+
+        const MAX_DAYS = 7
+        for (let i = 0; i < MAX_DAYS; i++) {
+            const date = new Date()
+            date.setDate(date.getDate() - i)
+            const day = String(date.getDate()).padStart(2, "0")
+            const month = String(date.getMonth() + 1).padStart(2, "0")
+            const year  = String(date.getFullYear()).slice(-2)
+            const dateStr = `${day}.${month}.${year}`
+
+            const finishes = lines.filter(a => a.includes(dateStr) && a.includes("FINISH"))
+            if (finishes.length === 0) continue
+
+            // Collect unique activities for this day
+            const activities = []
+            finishes.forEach(entry => {
+                const words = entry.split(" ")
+                if (!activities.includes(words[4])) activities.push(words[4])
+            })
+
+            // Sum hours per activity 
+            let activityHours = []
+            for (let j = 0; j < activities.length; j++){
+                const activityLines = finishes.filter(a => a.includes(activities[j]))
+                let currentHours = 0
+                activityLines.forEach(entry => {
+                    const words = entry.split(" ")
+                    const [h, m] = words[3].split(":")
+                    currentHours += parseInt(h) + parseInt(m) / 60
+                })
+                weekActivityTime[activities[j]]  = (weekActivityTime[activities[j]]  ?? 0) + currentHours
+            }
+        }
+    }
 }
 
 //event listeners
@@ -189,5 +375,34 @@ log.addEventListener("change", function(e) {
 
 statsButton.addEventListener("click", () => {
     stats.classList.toggle('hidden')
+    processForGraphTotal()
+    updateGraph(totalActivityTime)
 })
 
+//tabs
+const yearSwitch = document.getElementById('tabYearSwitch')
+const totalSwitch = document.getElementById('tabTotalSwitch')
+const monthSwitch = document.getElementById('tabMonthSwitch')
+const weekSwitch = document.getElementById('tabWeekSwitch')
+const statsTitle = document.getElementById('statsTitle')
+
+yearSwitch.addEventListener("click", () => {
+    statsTitle.textContent = "Year"
+    processForGraphYear()
+    updateGraph(yearActivityTime)
+})
+totalSwitch.addEventListener("click", () => {
+    statsTitle.textContent = "Total"
+    processForGraphTotal()
+    updateGraph(totalActivityTime)
+})
+monthSwitch.addEventListener("click", () => {
+    statsTitle.textContent = "Month"
+    processForGraphMonth()
+    updateGraph(monthActivityTime)
+})
+weekSwitch.addEventListener("click", () => {
+    statsTitle.textContent = "Week"
+    processForGraphWeek()
+    updateGraph(weekActivityTime)
+})

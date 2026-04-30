@@ -14,7 +14,7 @@ button {
 #activities{
     position: fixed;
     bottom: 20px;
-    top: 120px;
+    top: 180px;
     left: 20px;
     right: 20px;
 }
@@ -22,22 +22,37 @@ button {
 .activityBox{
     display: flex;
     flex: 1;
-    height: 70px;
-    margin-top: 10px;
-    background-color: #949494;
+    height: 60px;
+    margin-top: 0px;
+    border-color: #222;
+    border-radius: 5px;
+    border-width: 3px;
 }
 
 .activityName{
+    font-size: 20px;
+    margin: 0;
+    margin-top:22px;
+    min-width: 200px;
+    max-width: 200px;
+    font-family: "Roboto";
+}
+
+.activityHours{
     display: inline;
-    font-size: 35px;
-    width: 155px;
+    position: fixed;
+    font-size: 18px;
+    margin-top: 7px;
+    font-family: "Roboto";
+    margin-left: 6px;
 }
 
 .graphBar{
     margin: 0;
     margin-top: 18px;
     height: 35px;
-    background-color: #222;
+    background-color: #b788ba;
+    border-radius: 5px;
 }
 
 #statsButton{
@@ -69,6 +84,34 @@ button {
 #statsTitle{
     display: flex;
     justify-content: center;
+    font-size: 50px;
+}
+#totalHoursCounted{
+    display: inline;
+    position: fixed;
+    margin-top: 10px;
+    margin-left: 10px;
+    font-size: 20px;
+}
+#tabSwitchBox{
+    display: flex;
+    justify-content: right;
+    gap: 10px;
+    margin-top: 10px;
+    margin-right: 10px;
+}
+.tabSwitch{
+    color: #f7d5ff;
+    height: 30px;
+    width: 70px;
+    background-color: rgb(28, 0, 47);
+    border-radius: 5px;
+    box-shadow: none;
+    border: none;
+}
+.tabSwitch:hover{
+    background-color: rgb(75, 0, 125);
+    color: white;
 }
 
 #title{
