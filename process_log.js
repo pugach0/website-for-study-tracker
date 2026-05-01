@@ -13,31 +13,32 @@ const stats = document.getElementById('stats')
 const activitiesGraph = document.getElementById('activities')
 
 //grid creation
-for (let i = 0; i < days; i++) {
-    /* the cell and time inside*/
-    const cell = document.createElement("div");
-    cell.classList.add("cell");
-    cell.id = "day-" + (days - 1 - i);
-    cell.style.background = "#f9fff7";
-    const time = document.createElement("span");
-    time.id = "day-" + (days - 1 - i) + "t";
-    cell.appendChild(time);
-    grid.appendChild(cell);
-    cell.addEventListener("mouseover", (e) => {
-        tooltip.innerText = cell.dataset.time === null || cell.dataset.time === "" ? "nothing useful" : cell.dataset.time
-        tooltip.style.display = "block"
-        events.textContent = cell.dataset.events ?? " "
-    })
-    cell.addEventListener("mousemove", (e) => {
-        tooltip.style.left = e.clientX + 12 + "px"
-        tooltip.style.top  = e.clientY + 12 + "px"
-    })
-    cell.addEventListener("mouseleave", () => {
-        tooltip.style.display = "none"
-        events.textContent = " "
-    })
+function createGrid(currentDays = days){
+    for (let i = 0; i < currentDays; i++) {
+        /* the cell and time inside*/
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.id = "day-" + (currentDays - 1 - i);
+        cell.style.background = "#f9fff7";
+        const time = document.createElement("span");
+        time.id = "day-" + (currentDays - 1 - i) + "t";
+        cell.appendChild(time);
+        grid.appendChild(cell);
+        cell.addEventListener("mouseover", (e) => {
+            tooltip.innerText = cell.dataset.time ? cell.dataset.time : "nothing useful"
+            tooltip.style.display = "block"
+            events.textContent = cell.dataset.events ?? " "
+        })
+        cell.addEventListener("mousemove", (e) => {
+            tooltip.style.left = e.clientX + 12 + "px"
+            tooltip.style.top  = e.clientY + 12 + "px"
+        })
+        cell.addEventListener("mouseleave", () => {
+            tooltip.style.display = "none"
+            events.textContent = " "
+        })
+    }
 }
-
 //graph update
 activities = document.getElementById('activities')
 function updateGraph(ActivityTime){
@@ -110,9 +111,8 @@ function getColour(hours) {
     return "#f9fff7"
 }
 
-function daysInCurrentMonth() {
-    const now = new Date()
-    return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() 
+function daysInCurrentMonth(month = new Date().getMonth(), year = new Date().getFullYear()) {
+    return new Date(year, month + 1, 0).getDate()
 }
 
 function convertHours(totalHours){
@@ -122,53 +122,58 @@ function convertHours(totalHours){
 }
 
 
-function process(){
-    if(localStorage.getItem("log") !== null){
+function process(monthBackward = 0) {
+    if (localStorage.getItem("log") !== null) {
         const text = localStorage.getItem("log");
         const lines = text.split("\n").filter(l => l.trim() !== "")
 
-        for (let i = 0; i < now.getDate(); i++) {
-            const date = new Date()
-            date.setDate(date.getDate() - i)
+        const targetMonth = now.getMonth() - monthBackward
+        const targetYear = now.getFullYear()
+        const lastDay = monthBackward === 0 ? now.getDate() : daysInCurrentMonth(targetMonth, targetYear)
+
+        for (let d = 1; d <= lastDay; d++) {
+            const date = new Date(targetYear, targetMonth, d)
             const day = String(date.getDate()).padStart(2, "0")
             const month = String(date.getMonth() + 1).padStart(2, "0")
-            const year  = String(date.getFullYear()).slice(-2)
+            const year = String(date.getFullYear()).slice(-2)
             const dateStr = `${day}.${month}.${year}`
+
+            const currentDays = daysInCurrentMonth(targetMonth, targetYear)
+            const cellId = "day-" + (currentDays - d)
+            const currentCell = document.getElementById(cellId)
+            if (!currentCell) continue
 
             const finishes = lines.filter(a => a.includes(dateStr) && a.includes("FINISH"))
 
-            // Collect unique activities for this day
-            const activities = []
-            finishes.forEach(entry => {
-                const words = entry.split(" ")
-                if (!activities.includes(words[4])) activities.push(words[4])
-            })
+            if (finishes.length > 0) {
+                const activities = []
+                finishes.forEach(entry => {
+                    const words = entry.split(" ")
+                    if (!activities.includes(words[4])) activities.push(words[4])
+                })
 
-            // Sum hours per activity and bucket into time ranges
-            let activityHours = []
-            for (let j = 0; j < activities.length; j++){
-                const activityLines = finishes.filter(a => a.includes(activities[j]))
-                let currentHours = 0
-                activityLines.forEach(entry => {
+                let activityHours = []
+                for (let j = 0; j < activities.length; j++) {
+                    const activityLines = finishes.filter(a => a.includes(activities[j]))
+                    let currentHours = 0
+                    activityLines.forEach(entry => {
+                        const words = entry.split(" ")
+                        const [h, m] = words[3].split(":")
+                        currentHours += parseInt(h) + parseInt(m) / 60
+                    })
+                    activityHours.push(`${activities[j]} ${convertHours(currentHours)}`)
+                }
+                if (activityHours.length > 0) currentCell.dataset.time = activityHours.join("\n")
+
+                let hours = 0
+                finishes.forEach(entry => {
                     const words = entry.split(" ")
                     const [h, m] = words[3].split(":")
-                    currentHours += parseInt(h) + parseInt(m) / 60
+                    hours += parseInt(h) + parseInt(m) / 60
                 })
-                activityHours.push(`${activities[j]} ${convertHours(currentHours)}`)
+                currentCell.style.background = getColour(hours)
+                document.getElementById(cellId + "t").textContent = convertHours(hours) === "0:00" ? "" : convertHours(hours)
             }
-            const currentCell = document.getElementById("day-" + (days - date.getDate()))
-            currentCell.dataset.time = activityHours.join("\n")
-            
-            
-            // Total hours for cell color
-            let hours = 0
-            finishes.forEach(entry => {
-                const words = entry.split(" ")
-                const [h, m] = words[3].split(":")
-                hours += parseInt(h) + parseInt(m) / 60
-            })
-            currentCell.style.background = getColour(hours)
-            document.getElementById("day-" + (days - date.getDate()) + "t").textContent =convertHours(hours) == "0:00" ? "" : convertHours(hours)
 
             // Events
             const eventLines = lines.filter(a => a.includes("EVENT") && a.includes(dateStr))
@@ -177,11 +182,12 @@ function process(){
                 currentCell.style.boxShadow = "inset 0 0 0 5px yellow"
                 currentCell.dataset.events = events.join("\n")
             }
-            
         }
 
-        const todayCell = document.getElementById("day-" + (days - now.getDate()))
-        if (todayCell) todayCell.style.boxShadow = "inset 0 0 0 2px red"
+        if (monthBackward === 0) {
+            const todayCell = document.getElementById("day-" + (days - now.getDate()))
+            if (todayCell) todayCell.style.boxShadow = "inset 0 0 0 2px red"
+        }
         updateGraph(totalActivityTime)
     }
 }
@@ -357,6 +363,8 @@ function processForGraphWeek(){
 
 //event listeners
 window.addEventListener("load", function(e) {
+    grid.replaceChildren() 
+    createGrid(daysInCurrentMonth(now.getMonth()))
     process()
 })
 
@@ -365,8 +373,8 @@ log.addEventListener("change", function(e) {
     const reader = new FileReader()
     reader.onload = (e) => {
         const lines = e.target.result.split("\n")
-        /*console.log(lines[lines.length-2])        
-        console.log(lines[lines.length-2].split(" "))  */
+        console.log(lines[lines.length-1])        
+        console.log(lines[lines.length-1].split(" "))
         localStorage.setItem("log", e.target.result)
         process()
     }
@@ -405,4 +413,23 @@ weekSwitch.addEventListener("click", () => {
     statsTitle.textContent = "Week"
     processForGraphWeek()
     updateGraph(weekActivityTime)
+})
+
+//month tabs
+monthPos =0
+const monthCycleBackward = document.getElementById('monthCycleBackward')
+const monthCycleForward = document.getElementById('monthCycleForward')
+monthCycleBackward.addEventListener("click", () => {
+    monthPos++
+    title.textContent = new Date(now.getFullYear(), now.getMonth() - monthPos).toLocaleDateString('en', { month: 'long', year: 'numeric' })
+    grid.replaceChildren() 
+    createGrid(daysInCurrentMonth(now.getMonth() - monthPos))
+    process(monthPos)
+})
+monthCycleForward.addEventListener("click", () => {
+    monthPos--
+    title.textContent = new Date(now.getFullYear(), now.getMonth() - monthPos).toLocaleDateString('en', { month: 'long', year: 'numeric' })
+    grid.replaceChildren() 
+    createGrid(daysInCurrentMonth(now.getMonth() - monthPos))
+    process(monthPos)
 })
