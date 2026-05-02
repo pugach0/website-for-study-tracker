@@ -129,7 +129,8 @@ function process(monthBackward = 0) {
 
         const targetMonth = now.getMonth() - monthBackward
         const targetYear = now.getFullYear()
-        const lastDay = monthBackward === 0 ? now.getDate() : daysInCurrentMonth(targetMonth, targetYear)
+        //const lastDay = monthBackward === 0 ? now.getDate() : daysInCurrentMonth(targetMonth, targetYear)
+        const lastDay = daysInCurrentMonth(targetMonth, targetYear)
 
         for (let d = 1; d <= lastDay; d++) {
             const date = new Date(targetYear, targetMonth, d)
@@ -144,6 +145,13 @@ function process(monthBackward = 0) {
             if (!currentCell) continue
 
             const finishes = lines.filter(a => a.includes(dateStr) && a.includes("FINISH"))
+            const dayoffs = lines.filter(a => a.includes(dateStr) && a.includes("DAYOFF"))
+            if (dayoffs.length > 0) {
+                currentCell.style.background = "#7dd1b0"
+                currentCell.dataset.time = "Day off"
+                document.getElementById(cellId + "t").textContent = "DO"
+                continue
+            }
 
             if (finishes.length > 0) {
                 const activities = []
