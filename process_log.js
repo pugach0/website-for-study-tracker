@@ -13,7 +13,7 @@ const stats = document.getElementById('stats')
 const activitiesGraph = document.getElementById('activities')
 
 //grid creation
-function createGrid(currentDays = days){
+function createGrid(currentDays = days, buffer){
     for (let i = 0; i < currentDays; i++) {
         /* the cell and time inside*/
         const cell = document.createElement("div");
@@ -38,6 +38,11 @@ function createGrid(currentDays = days){
             events.textContent = " "
         })
     }
+    for (let i=0; i<buffer; i++){
+        const bufferCell = document.createElement("div");
+        bufferCell.classList.add("bufferCell")
+        grid.prepend(bufferCell)
+    }
 }
 //graph update
 activities = document.getElementById('activities')
@@ -53,6 +58,7 @@ function updateGraph(ActivityTime){
     const mostTime = sorted[0]?.[1] ?? 0
     let totalHoursCounted = 0
 
+    //custom decodings
     sorted.forEach(([key, value]) =>{
         const activityBox = document.createElement('div')
         activityBox.classList.add('activityBox')
@@ -72,6 +78,9 @@ function updateGraph(ActivityTime){
             break;
             case "NMT-UL":
                 activityName.textContent = "Ukrainian Language"
+            break;
+            case "CH":
+                activityName.textContent = "Chemistry"
             break;
             default:
                 activityName.textContent = key
@@ -129,8 +138,9 @@ function process(monthBackward = 0) {
 
         const targetMonth = now.getMonth() - monthBackward
         const targetYear = now.getFullYear()
-        //const lastDay = monthBackward === 0 ? now.getDate() : daysInCurrentMonth(targetMonth, targetYear)
         const lastDay = daysInCurrentMonth(targetMonth, targetYear)
+
+        const lastDayOfWeek = (new Date(targetYear, targetMonth, 1).getDay()+6)%7
 
         for (let d = 1; d <= lastDay; d++) {
             const date = new Date(targetYear, targetMonth, d)
@@ -372,7 +382,9 @@ function processForGraphWeek(){
 //event listeners
 window.addEventListener("load", function(e) {
     grid.replaceChildren() 
-    createGrid(daysInCurrentMonth(now.getMonth()))
+    buffer = (new Date(now.getFullYear(), now.getMonth(), 1).getDay()+6)%7
+    console.log(buffer)
+    createGrid(daysInCurrentMonth(now.getMonth()), buffer)
     process()
 })
 
@@ -431,13 +443,30 @@ monthCycleBackward.addEventListener("click", () => {
     monthPos++
     title.textContent = new Date(now.getFullYear(), now.getMonth() - monthPos).toLocaleDateString('en', { month: 'long', year: 'numeric' })
     grid.replaceChildren() 
-    createGrid(daysInCurrentMonth(now.getMonth() - monthPos))
+    buffer = (new Date(now.getFullYear(), now.getMonth() - monthPos, 1).getDay()+6)%7
+    createGrid(daysInCurrentMonth(now.getMonth() - monthPos), buffer)
     process(monthPos)
 })
 monthCycleForward.addEventListener("click", () => {
     monthPos--
     title.textContent = new Date(now.getFullYear(), now.getMonth() - monthPos).toLocaleDateString('en', { month: 'long', year: 'numeric' })
     grid.replaceChildren() 
-    createGrid(daysInCurrentMonth(now.getMonth() - monthPos))
+    buffer = (new Date(now.getFullYear(), now.getMonth() - monthPos, 1).getDay()+6)%7
+    createGrid(daysInCurrentMonth(now.getMonth() - monthPos), buffer)
     process(monthPos)
+})
+
+//info
+logInfo = document.getElementById("logInfo")
+logInfo.addEventListener("mouseover", () => {
+    tooltip.innerText = "The log file is located at /home/user/.config/study_tracker/log.txt by default"
+    tooltip.style.display = "block"
+})
+logInfo.addEventListener("mousemove", (e) => {
+    tooltip.style.left = e.clientX + 12 + "px"
+    tooltip.style.top  = e.clientY + 12 + "px"
+})
+logInfo.addEventListener("mouseleave", () => {
+    tooltip.style.display = "none"
+    events.textContent = " "
 })

@@ -1,6 +1,7 @@
 body {
     background-color: #c054ff;
     font-family: serif;
+    user-select: none;
 }
 
 .hidden{
@@ -143,26 +144,46 @@ button {
     font-size: 60px;
 }
 
+#fullGrid{
+    display: grid;
+  justify-content: center;
+  gap: 3px;
+  padding: 20px;  
+  padding-top: 2px;        
+  background-color: #dab7f6b7;
+  background-size: cover;
+  border-radius: 16px;   
+  border: 2px solid #422c4e; 
+  width: fit-content;     
+  margin: 0 auto;    
+}
 #grid {
   display: grid;
   justify-content: center;
-  gap: 3px;
-  padding: 20px;          /* padding between grid and background edge */
-  background-color: #3c3c71b7;
+  gap: 3px;        
   background-size: cover;
-  border-radius: 16px;    /* rounded corners */
-  width: fit-content;     /* shrinks background to wrap the grid */
-  margin: 0 auto;         /* centers it */
+  border-radius: 16px;    
+  width: fit-content;     
+  margin: 0 auto;         
+}
+#weekDays{
+    display: flex;
+    gap: 35px;   
+    font-size: 12px;
+    margin: 0;
+}
+.weekDay{
+    margin: 0;
 }
 
 #tooltip {
     display: none;
     position: fixed;
-    background: #222;
+    background: #1d1b27;
     color: white;
     padding: 8px 12px;
     border-radius: 8px;
-    font-size: 13px;
+    font-size: 15px;
     pointer-events: none; 
     z-index: 990;
 }
@@ -187,10 +208,29 @@ font-family: serif;
   margin-top: 0.5rem;
 }
 
+#logInfo{
+    display: flex;
+    height: 25px;
+    width: 25px;
+    background-color: #425eeb;
+    border-radius: 30px;
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px;
+    margin-top: 3px;
+    border: 1px solid #d3ddff;
+    
+}
+#logInfoText{
+    font-size: 20px;
+    margin: 0;
+    user-select: none;
+}
+
 #logForm{
     justify-content: center;
-    display: grid;
-    place-items: center;
+    display: flex;
+    padding-bottom: 30px;
 }
 
 #logLabel{
@@ -201,7 +241,7 @@ font-family: serif;
     border-radius: 0.3rem;
     cursor: pointer;
     font-family: sans-serif;
-    margin-bottom: 5%;
+    height: 20px;
     transition-duration: 0.5s;
 }
 #logLabel:hover{

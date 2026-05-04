@@ -33,11 +33,23 @@
     </div>
     <div>
         <form action="" id="logForm">
+            <div id="logInfo"><h1 id="logInfoText">i</h1></div>
             <label for="logInput" id="logLabel" hidden>Select log file</label>
             <input type="file" accept=".txt, .log" id="logInput" name="log" hidden>
         </form>
         <div id="gridBackground"></div>
-        <div id="grid"></div>
+        <div id="fullGrid">
+            <div id="weekDays">
+                <h1 class="weekDay">Mon</h1>
+                <h1 class="weekDay">Tue</h1>
+                <h1 class="weekDay">Wed</h1>
+                <h1 class="weekDay">Thu</h1>
+                <h1 class="weekDay">Fri</h1>
+                <h1 class="weekDay">Sat</h1>
+                <h1 class="weekDay">Son</h1>
+            </div>
+            <div id="grid"></div>
+        </div>
     </div>
     <div id="tooltip"></div>
     <div id="eventBox">
