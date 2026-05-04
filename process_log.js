@@ -14,14 +14,14 @@ const activitiesGraph = document.getElementById('activities')
 
 //grid creation
 function createGrid(currentDays = days, buffer){
-    for (let i = 0; i < currentDays; i++) {
+    for (let i = 1; i < currentDays+1; i++) {
         /* the cell and time inside*/
         const cell = document.createElement("div");
         cell.classList.add("cell");
-        cell.id = "day-" + (currentDays - 1 - i);
+        cell.id = "day-" + i;
         cell.style.background = "#f9fff7";
         const time = document.createElement("span");
-        time.id = "day-" + (currentDays - 1 - i) + "t";
+        time.id = "day-" + i + "t";
         cell.appendChild(time);
         grid.appendChild(cell);
         cell.addEventListener("mouseover", (e) => {
@@ -150,7 +150,7 @@ function process(monthBackward = 0) {
             const dateStr = `${day}.${month}.${year}`
 
             const currentDays = daysInCurrentMonth(targetMonth, targetYear)
-            const cellId = "day-" + (currentDays - d)
+            const cellId = "day-" + d
             const currentCell = document.getElementById(cellId)
             if (!currentCell) continue
 
@@ -203,7 +203,7 @@ function process(monthBackward = 0) {
         }
 
         if (monthBackward === 0) {
-            const todayCell = document.getElementById("day-" + (days - now.getDate()))
+            const todayCell = document.getElementById("day-" + now.getDate())
             if (todayCell) todayCell.style.boxShadow = "inset 0 0 0 2px red"
         }
         updateGraph(totalActivityTime)
@@ -380,12 +380,13 @@ function processForGraphWeek(){
 }
 
 //event listeners
+monthPos =0
 window.addEventListener("load", function(e) {
     grid.replaceChildren() 
     buffer = (new Date(now.getFullYear(), now.getMonth(), 1).getDay()+6)%7
     console.log(buffer)
     createGrid(daysInCurrentMonth(now.getMonth()), buffer)
-    process()
+    process(monthPos)
 })
 
 log.addEventListener("change", function(e) {
@@ -396,7 +397,11 @@ log.addEventListener("change", function(e) {
         console.log(lines[lines.length-1])        
         console.log(lines[lines.length-1].split(" "))
         localStorage.setItem("log", e.target.result)
-        process()
+        title.textContent = new Date(now.getFullYear(), now.getMonth() - monthPos).toLocaleDateString('en', { month: 'long', year: 'numeric' })
+        grid.replaceChildren() 
+        buffer = (new Date(now.getFullYear(), now.getMonth() - monthPos, 1).getDay()+6)%7
+        createGrid(daysInCurrentMonth(now.getMonth() - monthPos), buffer)
+        process(monthPos)
     }
     reader.readAsText(file)
 })
@@ -436,7 +441,7 @@ weekSwitch.addEventListener("click", () => {
 })
 
 //month tabs
-monthPos =0
+
 const monthCycleBackward = document.getElementById('monthCycleBackward')
 const monthCycleForward = document.getElementById('monthCycleForward')
 monthCycleBackward.addEventListener("click", () => {
